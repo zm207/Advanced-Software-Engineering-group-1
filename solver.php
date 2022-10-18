@@ -39,7 +39,7 @@ function solveStep($steps, $x = 0,	$y = 0){
 					if(solveStep($steps+1,$x,$y)){
 						return true;
 					} else {
-						setQueen($x,$y,$true);
+						setQueen($x,$y,true);
 					}
 				}
 				$y++;
