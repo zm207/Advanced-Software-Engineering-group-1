@@ -1,0 +1,7 @@
+Please note the folder named queens is the answer to the n queens’ problem. 
+It contains the files named 
+-	queens.php 
+-	solver.php 
+-	Style.css 
+This file is intended to be the submission for the queen’s problem. We completed and uploaded the files on the correct date (18/10/2022) but reuploaded them within the queen’s folder so that it may be easier for the users to navigate.  
+However the file named n-queensproblem.ipynb is not intended to be part of the final submission. It is merely research that the group conducted to understand how the program works and what is expected for the outcome. 
