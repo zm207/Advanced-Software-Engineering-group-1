@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>
+			Polysphere Solver
+		</title>
+		<style>
+			#wrap{
+				display: flex;
+				flex-direction: row;
+				flex-wrap: nowrap;
+				justify-content: center;
+				gap:5px;
+			}
+			#wrap > div{
+				padding:10px;
+				background-color: #adadad;
+				min-height:95vh;
+			}
+			#setup{
+				max-width: 500px;
+				min-width: 100px;
+			}
+			#settings{
+				display: flex;
+				flex-direction: row;
+				flex-wrap: wrap;
+				justify-content: space-evenly;
+				margin-bottom: 5px;
+			}
+			#settings > div {
+				border: 1px solid black;
+				display: flex;
+				flex-direction: column;
+				flex-wrap: nowrap;
+				text-align: center;
+				
+			}
+			#settings h2 {
+				margin:0px;
+				padding: 0px 5px;
+				background-color: #C2C2C2;
+			}
+			#settings h3 {
+				margin:0px;
+			}
+			#settings > div > div {
+				display: flex;
+				flex-direction: row;
+				flex-wrap: nowrap;
+				text-align: center;
+				justify-content: space-evenly;
+				margin: 10px 0px;
+			}
+			#shapes{
+				flex: 1;
+				display: flex;
+				flex-direction: row;
+				flex-wrap: wrap;
+				align-items: flex-start;
+				align-content: flex-start;
+				gap: 10px;
+			}
+			#shapes td{
+				border: 1px solid black;
+				height:20px;
+				width:20px;
+			}
+			#shapes #addShape{
+				order:5;
+				align-self: center;
+				cursor: pointer;
+			}
+			#addShape td{
+				height:10px;
+				width:10px;
+				background-color: grey;
+				color: grey;
+			}
+			table {
+				border-collapse: collapse;
+			}
+			#shapes td:not(.filled){
+				background: white;
+				color: white;
+			}
+			#addShape td:not(.filled){
+				background-color: transparent;
+				border: none;
+				color: transparent;
+			}
+			#shapes td.empty {
+				color: black;
+				background: transparent;
+				border: none;
+			}
+			#shapes td:not(.empty){
+				cursor: pointer;
+			}
+			#shapes td.kill {
+				color: red;
+				background: white;
+				text-align: center;
+			}
+			
+			
+			#solutions {
+				flex: 2;
+				max-width:1000px;
+				min-width:250px;
+				display:flex;
+				flex-flow: column nowrap;
+				align-items: stretch;
+			}
+			
+			#lastSolution td {
+				position: relative;
+				border: 1px solid black;
+			}
+			#lastSolution td > div {
+				position: absolute;
+				top: 0;
+				left: 0;
+				bottom: 0;
+				right: 0;
+			}
+			#lastSolution td:before {
+				content: "";
+				display: block;
+				padding-top: 100%;
+			}
+			#lastSolution td:not(.filled){
+				background: white;
+				color: white;
+			}
+			
+			#pastSolutions {
+				display:flex;
+				flex-flow: row wrap;
+				align-items: center;
+				gap: 10px;
+			}
+			
+			#pastSolutions td {
+				position: relative;
+				border: 1px solid black;
+			}
+			#pastSolutions table td {
+				min-width: 10px;
+			}
+			#pastSolutions table:hover {
+				box-shadow: 0px 0px 10px 2px #0ff;
+				cursor: pointer;
+			}
+			#pastSolutions .highlight td {
+				min-width: 20px;
+			}
+			#pastSolutions td > div {
+				position: absolute;
+				top: 0;
+				left: 0;
+				bottom: 0;
+				right: 0;
+			}
+			#pastSolutions td:before {
+				content: "";
+				display: block;
+				padding-top: 100%;
+			}
+			#pastSolutions td:not(.filled){
+				background: white;
+				color: white;
+			}
+			#solutionsTitle button {
+				padding:20px;
+				margin:20px;
+				font-size: 2.5em;
+			}
+		</style>
+		<script src="polysphere.js"></script>
+		<script>
+			var solutions = 0;
+			function showSolution(grid){
+				var table = "";
+				for(var i = 0; i < grid.length; i++) {
+					table+="<tr>";
+					for(var j = 0; j < grid[i].length; j++) {
+						var cell = grid[i][j]?" class=\"cell"+grid[i][j]+" filled\"":"";
+						table+="<td"+cell+"><div></div></td>";
+					}
+					table+="</tr>";
+				}
+				var node = document.createElement("table");
+				node.innerHTML = table;
+				node.setAttribute("onclick", "highlight(this)");
+				document.getElementById("pastSolutions").appendChild(node);
+				document.getElementById("lastSolution").innerHTML = table;
+				document.getElementById("solutionsTitle").innerHTML = "<center><h1>Solutions found: "+(++solutions)+"</h1></center>";
+			}
+			
+			function solve(){
+				document.getElementById("solutionsTitle").innerHTML = "<center><h1>Solutions found: 0</h1></center>";
+				document.getElementById("pastSolutions").innerHTML = "";
+				var shapes = document.getElementById("shapes").children;
+				var shapeArray = [];
+				for(var i = 1; i < shapes.length; i++) {
+					var shape = [];
+					var x = "";
+					var shapeN = parseInt(shapes[i].getAttribute("value"), 10);
+					for (var j = 1, row; row = shapes[i].rows[j]; j++) { //iterate through rows
+						shape[j-1] = [];
+						for (var k = 0, cell; cell = row.cells[k]; k++) {
+							shape[j-1][k] = cell.classList.contains('filled')?shapeN:0;
+							x += shape[j-1][k];
+						}
+						x += "\n";
+					}
+					console.log(x);
+					shapeArray.push(shape);
+					shapes[i].rows[0].remove();
+				}
+				var buttons = document.getElementsByClassName("editor");
+				while(buttons.length) {
+					buttons[0].remove();
+				}
+				
+				var solver = new PolysphereSolver(height,width,shapes);
+				solver.solve();
+				
+			}
+
+			function toggleShapeTile(cell){
+				if(cell.classList.contains('filled')){
+					cell.classList.remove('filled');
+				} else {
+					cell.classList.add('filled');
+				}
+			}
+			
+			function highlight(table){
+				if(table.classList.contains("highlight")){
+					table.classList.remove('highlight');
+				} else {
+					var highlighted = document.getElementsByClassName("highlight");
+					for(var i = 0; i < highlighted.length; i++) {
+						highlighted[i].classList.remove('highlight');
+					}
+					table.classList.add('highlight');
+				}
+			}
+			
+			var numShapes = 0;
+			var style;
+			var width = 6;
+			var height = 4;
+			
+			function drawGrid(){
+				var table = "";
+				for(var i = 0; i < height; i++) {
+					table+="<tr>";
+					for(var j = 0; j < width; j++) {
+						table+="<td><div></div></td>";
+					}
+					table+="</tr>";
+				}
+				var node = document.createElement("table");
+				node.innerHTML = table;
+				document.getElementById("lastSolution").innerHTML = table;
+			}
+			
+			function changeWidth(shrink = false){
+				width += shrink?-1:1;
+				drawGrid();
+			}
+			
+			function changeHeight(shrink = false){
+				height += shrink?-1:1;
+				drawGrid();
+			}
+			
+			function addShape(size = false, colour = false){
+				size = size?size:getSize();
+				colour = colour?colour:getColour();
+				var node = document.createElement("table");
+				var shapes = document.getElementById("shapes");
+				var cell = ++numShapes;
+				node.setAttribute("value", cell);
+				var html = "";
+				for(var i = 0; i<size; i++){
+					html += "<tr>";
+					for(var j = 0; j<size; j++){
+						html += "<td class=\"cell"+cell+(Math.floor(Math.random() * 2)?" filled":"")+"\" onclick=\"toggleShapeTile(this)\"></td>";
+					}
+					html += "</tr>";
+				}
+				node.innerHTML = "<tr>"+(size>1?"<td class=\"empty\" colspan="+(size-1)+"></td>":"")+"<td class=\"kill filled\" onclick=\"kill(this)\">X</td></tr>"+html;
+				shapes.appendChild(node);
+				style.insertRule(".cell"+numShapes+"{background-color: #"+colour+";color: #"+colour+";}",style.cssRules.length);
+			}
+			
+			function kill(cell){
+				var table = cell.parentNode.parentNode.parentNode;
+				var i = Array.prototype.slice.call(table.parentNode.children).indexOf(table);
+				table.remove();
+				style.deleteRule(i);
+			}
+			
+			function getColour(){
+				let colour = prompt("Please enter a colour code:", Math.floor(Math.random()*16777215).toString(16));
+				colour = colour?colour:Math.floor(Math.random()*16777215).toString(16);
+				return colour;
+			}
+			
+			function getSize(){
+				let size = prompt("Please enter a size:", "3");
+				size = parseInt(size, 10);
+				size = isNaN(size)?3:size>0?size:3;
+				return size;
+			}
+			
+			
+		</script>
+	</head>
+	<body>
+	<div id="wrap">
+		<div id="setup">
+			<h1>
+				Polysphere Solver
+			</h1>
+			<p>
+			Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+			</p>
+			<div id="settings">
+				<div>
+					<h2>Width</h2>
+					<div>
+						<button onclick="changeWidth(true)" class="editor">-</button>
+						<h3>5</h3>
+						<button onclick="changeWidth()" class="editor">+</button>
+					</div>
+				</div>
+				<div>
+					<h2>Height</h2>
+					<div>
+						<button onclick="changeHeight(true)" class="editor">-</button>
+						<h3>5</h3>
+						<button onclick="changeHeight()" class="editor">+</button>
+					</div>
+				</div>
+			</div>
+			<h1>
+				Shapes
+			</h1>
+			<div id="shapes">
+				<table id="addShape" class="editor" onclick="addShape()">
+					<tbody>
+						<tr>
+							<td></td><td class="filled"></td><td></td>
+						</tr>
+						<tr>
+							<td class="filled"></td><td class="filled"></td><td class="filled"></td>
+						</tr>
+						<tr>
+							<td></td><td class="filled"></td><td></td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+		<div id="solutions">
+				<table id="lastSolution">
+					
+				</table>
+				<div id="solutionsTitle">
+					<center>
+						<button onclick="solve()">Solve</button>
+					</center>
+				</div>
+				<div id="pastSolutions">
+					
+				</div>
+		</div>
+	</div>
+	<script>
+	var styleEl = document.createElement('style');
+	document.head.appendChild(styleEl);
+	style = styleEl.sheet;
+	style.insertRule(".cell0{}");
+	addShape(3,"0000FF");
+	addShape(3,"FF0000");
+	addShape(3,"00FF00");
+	addShape(3,"F0F000");
+	addShape(3,"00F0F0");
+	addShape(3,"F000F0");
+	var a = [
+		[1,1,2,0,3,3],
+		[1,2,2,2,3,3],
+		[1,4,2,0,5,5],
+		[4,4,4,5,5,0]
+	];
+/*	showSolution(a);
+	showSolution(a);
+	showSolution(a);
+	showSolution(a);
+	showSolution(a);
+	showSolution(a);
+	showSolution(a);
+	showSolution(a);
+	showSolution(a);
+	showSolution(a);
+	showSolution(a);
+	showSolution(a);
+	showSolution(a);
+	showSolution(a);
+	showSolution(a);
+	showSolution(a);
+	showSolution(a);
+	showSolution(a);
+	showSolution(a);
+	showSolution(a);
+	setTimeout(() => solve(),1000);
+	*/
+	drawGrid();
+	</script>
+	</body>
+</html>
