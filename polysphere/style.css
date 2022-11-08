@@ -15,20 +15,29 @@
 	min-width: 100px;
 }
 #settings{
+	column-gap: 15px;
 	display: flex;
 	flex-direction: row;
 	flex-wrap: wrap;
 	justify-content: space-evenly;
 	margin-bottom: 5px;
 }
+
+#settings button{
+	font-size:1.5em;
+}
+
 #settings > div {
 	border: 1px solid black;
 	display: flex;
 	flex-direction: column;
 	flex-wrap: nowrap;
 	text-align: center;
-	
 }
+#settings > * {
+	flex: 1;
+}
+
 #settings h2 {
 	margin:0px;
 	padding: 0px 5px;
