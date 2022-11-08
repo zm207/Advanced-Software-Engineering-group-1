@@ -1,9 +1,10 @@
-class PolysphereSolver {
-	h; // height of grid
-	w; // width of grid
-	p; // pieces that can be inserted into the grid
-	totalSquares; // total number of squares from combining all shapes
-	errors; // for storing information about poor setups
+class Polysphere {
+	#h; // height of grid
+	#w; // width of grid
+	#p; // pieces that can be inserted into the grid
+	#totalSquares; // total number of squares from combining all shapes
+	#errors; // for storing information about poor setups
+	#worker;
 	
 	constructor(height, width, pieces, grid = false) {
 		this.h = height;
@@ -12,12 +13,12 @@ class PolysphereSolver {
 		this.g = grid
 		this.totalSquares = 0;
 		this.errors = [];
-		this.setupPieces();
+		this.#setupPieces();
 	}
 	
-	setupPieces(){
+	#setupPieces(){
 		for(var i = this.p.length-1; i>-1; i--){
-			this.p[i] = this.trimPiece(this.p[i]); //remove empty edge rows/columns
+			this.p[i] = this.#trimPiece(this.p[i]); //remove empty edge rows/columns
 			var killPiece = false;
 			if(this.p[i].length < 1){
 				this.errors.unshift("Shape "+i+" is empty.");
@@ -41,27 +42,16 @@ class PolysphereSolver {
 		}
 	}
 	
-	rotatePiece(piece){
-		var newPiece = [];
-		for(var i = 0; i < piece[0].length; i++){
-			newPiece[i] = [];
-			for(var j = 0; j < piece.length; j++){
-				newPiece[i][j] = piece[j][(piece[0].length-i)-1];
-			}
-		}
-		return newPiece;
-	}
-	
-	logPieces(header = false){
+	#logPieces(header = false){
 		if(header){
 			console.log("("+this.p.length+")"+header);
 		}
 		for(var i = 0; i < this.p.length; i++) {
-			this.logPiece(this.p[i]);
+			this.#logPiece(this.p[i]);
 		}
 	}
 	
-	logPiece(piece, header = false){
+	#logPiece(piece, header = false){
 		if(header){
 			console.log("("+piece.length+")"+header);
 		}
@@ -75,7 +65,7 @@ class PolysphereSolver {
 		console.log(x);
 	}
 	
-	trimPiece(piece){
+	#trimPiece(piece){
 		var firstRow, lastRow, firstColumn, lastColumn;
 		lastRow = lastColumn = -1;
 		firstRow = piece.length;
@@ -117,8 +107,8 @@ class PolysphereSolver {
 	
 	solve(){
 		//alert("not yet implemented","");
-		var worker = new Worker("polysphereWorker.js");
-		worker.onmessage = function(event){
+		this.worker = new Worker("polysphereWorker.js");
+		this.worker.onmessage = function(event){
 			if(event.data){
 				showSolution(event.data);
 			} else {
@@ -126,7 +116,15 @@ class PolysphereSolver {
 			}
 		};
 		var data = [this.h,this.w,this.p,this.g];
-		worker.postMessage(data);
+		this.worker.postMessage(data);
+	}
+	
+	stop(){
+		if(this.worker){
+			this.worker.postMessage("stop");
+			this.worker.terminate();
+			console.log("hi");
+		}
 	}
 	
 }
