@@ -116,6 +116,7 @@
 			#lastSolution td {
 				position: relative;
 				border: 1px solid black;
+				cursor: pointer;
 			}
 			#lastSolution td > div {
 				position: absolute;
@@ -199,34 +200,51 @@
 			}
 			
 			function solve(){
-				document.getElementById("solutionsTitle").innerHTML = "<center><h1>Solutions found: 0</h1></center>";
-				document.getElementById("pastSolutions").innerHTML = "";
 				var shapes = document.getElementById("shapes").children;
 				var shapeArray = [];
 				for(var i = 1; i < shapes.length; i++) {
 					var shape = [];
-					var x = "";
 					var shapeN = parseInt(shapes[i].getAttribute("value"), 10);
 					for (var j = 1, row; row = shapes[i].rows[j]; j++) { //iterate through rows
 						shape[j-1] = [];
 						for (var k = 0, cell; cell = row.cells[k]; k++) {
 							shape[j-1][k] = cell.classList.contains('filled')?shapeN:0;
-							x += shape[j-1][k];
 						}
-						x += "\n";
 					}
-					console.log(x);
 					shapeArray.push(shape);
-					shapes[i].rows[0].remove();
 				}
-				var buttons = document.getElementsByClassName("editor");
-				while(buttons.length) {
-					buttons[0].remove();
+				var grid = [];
+				var gridDisplay = document.getElementById("lastSolution");
+				for(var i = 0, row; row = gridDisplay.rows[i]; i++) {
+					grid[i] = [];
+					for(var j = 0, cell; cell = row.cells[j]; j++) { 
+						grid[i][j] = cell.classList.contains('filled')?1:0;
+					}
 				}
+				console.log(grid);
+				var solver = new PolysphereSolver(height,width,shapeArray,grid);
 				
-				var solver = new PolysphereSolver(height,width,shapes);
-				solver.solve();
-				
+				var errors = solver.getErrors();
+				if(errors.length > 0){
+					var errorMessages = "<h1>Errors</h1><ul>";
+					for(var i = 0; i < errors.length; i++){
+						errorMessages+="<li>"+errors[i]+"</li>";
+					}
+					document.getElementById("errors").innerHTML = errorMessages+"</ul>";
+				} else {
+					document.getElementById("errors").innerHTML = "";
+					document.getElementById("solutionsTitle").innerHTML = "<center><h1>Solutions found: 0</h1></center>";
+					document.getElementById("pastSolutions").innerHTML = "";
+					var buttons = document.getElementsByClassName("editor");
+					while(buttons.length) {
+						buttons[0].remove();
+					}
+					for(var i = 0; i < shapes.length; i++) {
+						shapes[i].rows[0].remove();
+					}
+						
+					solver.solve();
+				}
 			}
 
 			function toggleShapeTile(cell){
@@ -249,32 +267,38 @@
 				}
 			}
 			
-			var numShapes = 0;
+			var numShapes = 1;
 			var style;
-			var width = 6;
-			var height = 4;
+			var width = 11;
+			var height = 5;
 			
 			function drawGrid(){
 				var table = "";
+				var newSolution = "";
 				for(var i = 0; i < height; i++) {
 					table+="<tr>";
+					newSolution+="<tr>";
 					for(var j = 0; j < width; j++) {
-						table+="<td><div></div></td>";
+						table+="<td onclick=\"toggleShapeTile(this)\"><div></div></td>";
+						newSolution+="<td><div></div></td>";
 					}
 					table+="</tr>";
+					newSolution+="</tr>";
 				}
 				var node = document.createElement("table");
-				node.innerHTML = table;
+				node.innerHTML = newSolution;
 				document.getElementById("lastSolution").innerHTML = table;
 			}
 			
 			function changeWidth(shrink = false){
 				width += shrink?-1:1;
+				document.getElementById("width").innerHTML = width;
 				drawGrid();
 			}
 			
 			function changeHeight(shrink = false){
 				height += shrink?-1:1;
+				document.getElementById("height").innerHTML = height;
 				drawGrid();
 			}
 			
@@ -294,6 +318,25 @@
 					html += "</tr>";
 				}
 				node.innerHTML = "<tr>"+(size>1?"<td class=\"empty\" colspan="+(size-1)+"></td>":"")+"<td class=\"kill filled\" onclick=\"kill(this)\">X</td></tr>"+html;
+				shapes.appendChild(node);
+				style.insertRule(".cell"+numShapes+"{background-color: #"+colour+";color: #"+colour+";}",style.cssRules.length);
+			}
+			
+			function addPreset(preset, colour = false){
+				colour = colour?colour:Math.floor(Math.random()*16777215).toString(16);
+				var node = document.createElement("table");
+				var shapes = document.getElementById("shapes");
+				var cell = ++numShapes;
+				node.setAttribute("value", cell);
+				var html = "";
+				for(var i = 0; i<preset.length; i++){
+					html += "<tr>";
+					for(var j = 0; j<preset[0].length; j++){
+						html += "<td class=\"cell"+cell+(preset[i][j]>0?" filled":"")+"\" onclick=\"toggleShapeTile(this)\"></td>";
+					}
+					html += "</tr>";
+				}
+				node.innerHTML = "<tr>"+"<td class=\"empty\" colspan="+(preset[0].length-1)+"></td>"+"<td class=\"kill filled\" onclick=\"kill(this)\">X</td></tr>"+html;
 				shapes.appendChild(node);
 				style.insertRule(".cell"+numShapes+"{background-color: #"+colour+";color: #"+colour+";}",style.cssRules.length);
 			}
@@ -318,7 +361,9 @@
 				return size;
 			}
 			
-			
+			function resetPage(){
+				alert("That's all, folks!");
+			}
 		</script>
 	</head>
 	<body>
@@ -335,7 +380,7 @@
 					<h2>Width</h2>
 					<div>
 						<button onclick="changeWidth(true)" class="editor">-</button>
-						<h3>5</h3>
+						<h3 id="width">11</h3>
 						<button onclick="changeWidth()" class="editor">+</button>
 					</div>
 				</div>
@@ -343,10 +388,12 @@
 					<h2>Height</h2>
 					<div>
 						<button onclick="changeHeight(true)" class="editor">-</button>
-						<h3>5</h3>
+						<h3 id="height">5</h3>
 						<button onclick="changeHeight()" class="editor">+</button>
 					</div>
 				</div>
+			</div>
+			<div id="errors">
 			</div>
 			<h1>
 				Shapes
@@ -386,40 +433,60 @@
 	document.head.appendChild(styleEl);
 	style = styleEl.sheet;
 	style.insertRule(".cell0{}");
-	addShape(3,"0000FF");
-	addShape(3,"FF0000");
-	addShape(3,"00FF00");
-	addShape(3,"F0F000");
-	addShape(3,"00F0F0");
-	addShape(3,"F000F0");
-	var a = [
-		[1,1,2,0,3,3],
-		[1,2,2,2,3,3],
-		[1,4,2,0,5,5],
-		[4,4,4,5,5,0]
-	];
-/*	showSolution(a);
-	showSolution(a);
-	showSolution(a);
-	showSolution(a);
-	showSolution(a);
-	showSolution(a);
-	showSolution(a);
-	showSolution(a);
-	showSolution(a);
-	showSolution(a);
-	showSolution(a);
-	showSolution(a);
-	showSolution(a);
-	showSolution(a);
-	showSolution(a);
-	showSolution(a);
-	showSolution(a);
-	showSolution(a);
-	showSolution(a);
-	showSolution(a);
-	setTimeout(() => solve(),1000);
-	*/
+	style.insertRule(".cell1{background-color: #000000;color: #000000;}");
+	addPreset([
+		[1,1,1],
+		[1,0,1]
+		]);
+	addPreset([
+		[0,0,1,1],
+		[1,1,1,0]
+		]);
+	addPreset([
+		[0,1,0],
+		[1,1,0],
+		[0,1,1]
+		]);
+	addPreset([
+		[0,1,0],
+		[1,1,1]
+		]);
+	addPreset([
+		[0,1,0,0],
+		[1,1,1,1]
+		]);
+	addPreset([
+		[0,1,1],
+		[1,1,1]
+		]);
+	addPreset([
+		[0,1,1],
+		[1,1,0]
+		]);
+	addPreset([
+		[1,1],
+		[1,0],
+		[1,0]
+		]);
+	addPreset([
+		[1,1,1],
+		[0,0,1],
+		[0,0,1]
+		]);
+	addPreset([
+		[1,0,0,0],
+		[1,1,1,1]
+		]);
+	addPreset([
+		[1,0],
+		[1,1]
+		]);
+	addPreset([
+		[1,1,0],
+		[0,1,1],
+		[0,0,1]
+		]);
+		/**/
 	drawGrid();
 	</script>
 	</body>
