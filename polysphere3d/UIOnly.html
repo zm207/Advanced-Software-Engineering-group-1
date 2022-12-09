@@ -1,0 +1,268 @@
+<html>
+<head>
+	<style>
+		:root {
+			--sphere-size-main: 30px;
+		}
+		table{
+			border-collapse: collapse;
+		}
+		td{
+			min-width: var(--sphere-size-main);
+			min-height: var(--sphere-size-main);
+			max-width: var(--sphere-size-main);
+			max-height: var(--sphere-size-main);
+			border-radius: 50%;
+			display: inline-block;
+		}
+		#wrap{
+			display: flex;
+			flex-direction: row;
+			flex-wrap: nowrap;
+			justify-content: center;
+			gap:5px;
+		}
+		#wrap > div{
+			padding:10px;
+			background-color: #adadad;
+			min-height:95vh;
+		}
+		#left{
+			column-gap: 15px;
+			display: flex;
+			flex-direction: row;
+			flex-wrap: wrap;
+			justify-content: space-evenly;
+			margin-bottom: 5px;
+		}
+		#left{
+			max-width: 500px;
+			min-width: 100px;
+		}
+		#right {
+			flex: 2;
+			max-width:1000px;
+			min-width:250px;
+			display:flex;
+			flex-flow: column nowrap;
+			align-items: stretch;
+		}
+		#displays {
+			display: flex;
+			flex-flow: row nowrap;
+		}
+		#mainDisplay{
+			display: inline-block;
+			min-width:250px;
+			min-height:250px;
+		}
+		#mainDisplay > table {
+			position: absolute;
+			margin:0px;
+		}
+		#segmentDisplay {
+			display: flex;
+			flex-flow: row;
+		}
+		#segmentDisplay > table {
+			margin: 5px;
+		}
+	</style>
+		mainDisplay table
+
+	<script>
+		var style,colours,solutions;
+		
+		function init(){
+			style = document.createElement('style');
+			document.head.appendChild(style);
+			style = style.sheet;
+			matrix = [];
+			solutions = [];
+			/*
+			for(var i=0; i<40000; i++){
+				var x = [];
+				for(var j=0; j< 60; j++){
+					x.push(Math.floor(Math.random()*2));
+				}
+				matrix.push(x);
+				//console.log(x);
+			}
+			//console.log(matrix);
+			*/
+		}
+		
+		function display(data){
+			var count = 0, level = 0, mainHTML, segHTML, offset, loc, numStyles, colour;
+			colours = ["ffffff"];
+			while(style.cssRules.length>0) {
+				style.deleteRule(style.cssRules[i]);
+			}
+			style.insertRule(".shape0{background-color: #ffffff;color: #ffffff;}",0);
+			while(count<data.length){
+				level++;
+				count+=(level*level);
+			}
+			//console.log("levels: "+level+" count: "+count);
+			mainHTML = "";
+			segHTML = "";
+			offset = 0;
+			numStyles=0;
+			for(var i=1; i<=level; i++){
+				mainHTML+="<table style=\"z-index: "+(level-i)+"; margin: calc(var(--sphere-size-main)*"+((level-i)/2)+")\">";
+				segHTML+="<div style=\"margin-top: calc(var(--sphere-size-main)*"+((level-i)/2)+")\"><table>";
+				for(var j=0; j<i; j++){
+					mainHTML+="<tr>";
+					segHTML+="<tr>";
+					for(var k=0; k<i; k++){
+						loc = offset+(j*i)+k;
+						mainHTML+="<td class=\"shape"+data[loc]+"\">.</td>";
+						segHTML+="<td class=\"shape"+data[loc]+"\">.</td>";
+						if(parseInt(data[loc])>numStyles){
+							numStyles=data[loc];
+						}
+					}
+					mainHTML+="</tr>";
+					segHTML+="</tr>";
+				}
+				mainHTML+="</table>";
+				segHTML+="</table></div>";
+				offset+=(i*i);
+			}
+			
+			mainHTML = "";
+			offset = 0;
+			
+			for(var i=1; i<=level; i++){
+				mainHTML+="<table style=\"z-index: "+(level-i)+"; margin: calc(var(--sphere-size-main)*"+((level-i)/2)+")\">";
+				//segHTML+="<table>";
+				for(var j=0; j<i; j++){
+					mainHTML+="<tr>";
+					//segHTML+="<tr>";
+					for(var k=0; k<i; k++){
+						loc = offset+(j*i)+k;
+						//console.log("offset:"+offset+" i:"+i+" j:"+j+" k:"+k+" loc:"+loc+" data:"+data[loc]);
+						mainHTML+="<td class=\"shape"+data[loc]+"\">.</td>";
+						//segHTML+="<td class=\"shape"+data[loc]+"\">.</td>";
+						if(parseInt(data[loc])>numStyles){
+							numStyles=data[loc];
+						}
+					}
+					mainHTML+="</tr>";
+					//segHTML+="</tr>";
+				}
+				mainHTML+="</table>";
+				//segHTML+="</table>";
+				offset+=(i*i);
+			}
+			for(var i=1; i<=numStyles; i++){
+				colour = getColour();
+				style.insertRule(".shape"+i+"{background-color: #"+colour+";color: #"+colour+";}",i);
+				//console.log(".shape"+i+"{background-color: #"+colour+";color: #"+colour+";}",i);
+				colours.push(colour);
+			}
+			//console.log(style);
+			document.getElementById("mainDisplay").innerHTML = mainHTML;
+			
+			
+			
+			document.getElementById("segmentDisplay").innerHTML = segHTML;
+			//console.log(solutions[solutions.length]);
+			var x = "<table onclick=\"data=solutions["+solutions.length+"];display(data);\"><tr>"
+			solutions.push(data);
+			for(var i =0; i<data.length; i++){
+				x+="<td style=\"min-width:10px;min-height:10px;max-height:10px\" class=\"shape"+data[i]+"\">.</td>";
+			}
+			x+="</table>";
+			document.getElementById("solutions").innerHTML += x;
+			//console.log(mainHTML);
+		}
+		
+		
+			
+		function getColour(){
+			//let colour = prompt("Please enter a colour code:", Math.floor(Math.random()*16777215).toString(16));
+			var colour = false;
+			colour = colour?colour:Math.floor(Math.random()*16777215).toString(16);
+			while(colour.length<6){
+				colour = "0"+colour;
+			}
+			return colour;
+		}
+	</script>
+</head>
+	<body>
+	<div id="wrap">
+		<div id="left">
+		<!-- setup stuff-->
+		</div>
+		<div id="right">
+		<!-- display stuff-->
+			<div id="displays">
+				<div id="mainDisplay">
+					
+				</div>
+				<div id="segmentDisplay">
+					
+				</div>
+			</div>
+			<div id="solutions">
+				
+			</div>
+		</div>
+	</div>
+	<script>
+	var data = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+	init();
+	display(data);
+	setTimeout(()=>{
+		data = [1,2,1,1,3,4,2,1,4,4,4,5,4,3,6,6,6,7,6,2,1,8,6,5,8,8,5,8,8,3,9,9,9,9,7,9,10,2,7,11,10,10,5,11,11,10,5,12,3,11,10,12,12,12,11];
+		display(data);
+		
+		//console.log("change");
+	},5000);
+	/*
+		wub = [
+			[[1,0,0],[1,1,1],[0,1,0]],
+			[[1,1,0,0],[0,1,1,1]],
+			[[1,1,1],[1,0,1]],
+			[[1,1,1],[1,0,0]],
+			[[1,1,1,1],[0,0,0,1]],
+			[[1,1,0],[0,1,1]],
+			[[1,0,0],[1,1,0],[0,1,1]],
+			[[1,1,1],[1,0,0],[1,0,0]],
+			[[1,1],[1,0]],
+			[[1,1,1],[0,1,0]],
+			[[1,1,1,1],[0,1,0,0]],
+			[[1,1],[1,1],[1,0]]
+		]
+		var s = new Worker("solver.js");
+		s.onmessage = function(event){
+			console.log("hi");
+			display(event.data);
+			//console.log(event.data);
+		}
+		var w, ws=[];
+		for(var i = 0; i < wub.length; i++){
+			w = new Worker("shapeMaker.js");
+			w.onmessage = function(event){
+				//ws.push(event.data);
+				s.postMessage(event.data);
+			}
+			w.postMessage([5,i,12]);
+			w.postMessage(wub[i]);
+			w.postMessage(1);
+		}
+		//while(ws.length<1){};
+		for(var i = 0; i < ws.length; i++){
+			s.postMessage(ws[i]);
+			s.postMessage(1);
+		}
+		
+		*/
+	</script>
+	<script type="module" src="three.js"></script>
+	<script type="module" src="3d.js"></script>
+	<script src="shapeMaker.js"></script>
+</body>
+</html>
